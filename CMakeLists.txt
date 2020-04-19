@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.13)
 project(rc_flight_controller)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 
-add_executable(rc_flight_controller main.cpp)
+add_executable(rc_flight_controller src/main.cpp src/sbus.cpp src/sbus.h)
