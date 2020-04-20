@@ -12,9 +12,13 @@
 #include <cerrno>
 
 #include <cinttypes>
+#include <utility>
 #include <asm/ioctls.h>
 #include <asm/termbits.h>
 #include <sys/ioctl.h>
+#include <thread>
+#include <algorithm>
+
 
 
 #include "Sbus.h"
@@ -22,7 +26,7 @@
 // TODO: Replace C code with C++
 bool Sbus::serialBegin() {
 
-    serialPort = open(devicePath, O_RDWR | O_NOCTTY);
+    serialPort = open(devicePath.c_str(), O_RDWR | O_NOCTTY);
 
     if (serialPort < 0) {
 
@@ -75,6 +79,8 @@ void Sbus::sbusPrint() {
 }
 
 bool Sbus::sbusParse(const uint8_t *frame) {
+
+    std::lock_guard<std::mutex> guard(channelsMutex);
 
     channels[0]  = (uint16_t) ((frame[0]     | frame[1] <<8)                     & 0x07FF);
     channels[1]  = (uint16_t) ((frame[1]>>3  | frame[2] <<5)                     & 0x07FF);
@@ -155,3 +161,26 @@ bool Sbus::serialRead(uint8_t *frame) {
 
     return true;
 }
+
+void Sbus::checkSbus() {
+    serialBegin();
+
+    uint8_t frame[_payloadSize];
+
+    serialRead(frame);
+    sbusParse(frame);
+}
+
+Sbus::Sbus(std::string devicePath) : devicePath(std::move(devicePath)) {
+
+    std::thread sbusInThread(&Sbus::checkSbus, this);
+}
+
+
+std::array<uint16_t, Sbus::_numChannels> Sbus::getChannels() {
+
+    std::lock_guard<std::mutex> guard(channelsMutex);
+    return channels;
+}
+
+

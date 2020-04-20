@@ -7,6 +7,7 @@
 
 
 #include <string>
+#include <mutex>
 
 
 /**
@@ -22,7 +23,8 @@
 class Sbus {
 private:
     uint32_t serialPort;
-    const char* devicePath;
+    std::string devicePath;
+
 
     static const uint32_t _sbusBaud = 100000;
     static const uint8_t _numChannels = 20;
@@ -46,7 +48,10 @@ private:
      *      - 18: failsafe activated bit,
      *      - 19: lost frame bit.
      */
-    uint16_t channels[_numChannels];
+//    uint16_t channels[_numChannels];
+    std::array<uint16_t, _numChannels> channels;
+    std::mutex channelsMutex;
+
 
     /**
     * @brief Initializes Raspberry Pi's serial interface to accept communication
@@ -73,14 +78,18 @@ private:
     /**
      * @brief Reads raw data from the serial interface.
      *
-     * @param frame - an array of bytes to store incomming data. Must be minimum 24
+     * @param frame - an array of bytes to store incoming data. Must be minimum 24
      * bytes long
      * @return bool: true - on success, false - on failure
      */
     bool serialRead(uint8_t* frame);
 
+    void checkSbus();
+    
 public:
+    explicit Sbus(std::string devicePath);
 
+    std::array<uint16_t, _numChannels> getChannels();
 
 
 };
