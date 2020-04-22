@@ -11,6 +11,7 @@ int main() {
 
 
     std::thread t1([&sbus](){
+        sbus.serialBegin();
         while (true) {
             sbus.checkSbus();
         }
@@ -18,10 +19,12 @@ int main() {
 
     std::thread t2([&sbus](){
         while (true) {
-            for(auto channel: sbus.getChannels()){
-                std::cout << channel << " ";
+            if(sbus.getFreshness() == 0){
+                for(auto channel: sbus.getChannels()){
+                    std::cout << channel << " ";
+                }
+                std::cout << std::endl;
             }
-            std::cout << std::endl;
         }
     });
 

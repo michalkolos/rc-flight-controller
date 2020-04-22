@@ -80,8 +80,6 @@ void Sbus::sbusPrint() {
 
 bool Sbus::sbusParse(const uint8_t *frame) {
 
-    std::lock_guard<std::mutex> guard(channelsMutex);
-
     channels[0]  = (uint16_t) ((frame[0]     | frame[1] <<8)                     & 0x07FF);
     channels[1]  = (uint16_t) ((frame[1]>>3  | frame[2] <<5)                     & 0x07FF);
     channels[2]  = (uint16_t) ((frame[2]>>6  | frame[3] <<2 | frame[4]<<10)      & 0x07FF);
@@ -149,8 +147,6 @@ bool Sbus::serialRead(uint8_t *frame) {
             return false;
         }
 
-        std::cout << "Value read: " << byteBuffer << std::endl;
-
         if(byteBuffer[0] == _sbusHeader && prevByte == _sbusFooter){
             frameCouter = 0;
         }else{
@@ -165,28 +161,30 @@ bool Sbus::serialRead(uint8_t *frame) {
 }
 
 void Sbus::checkSbus() {
-    serialBegin();
+    serialRead(frame);
 
-    uint8_t frame[_payloadSize];
-    memset(frame, 0,  _payloadSize * sizeof(uint8_t));
-//
-    while(true) {
-        serialRead(frame);
+    {
+        std::lock_guard<std::mutex> guard(channelsMutex);
         sbusParse(frame);
+        freshness = 0;
     }
 }
 
 Sbus::Sbus(std::string devicePath) : devicePath(std::move(devicePath)) {
-
-//    std::thread sbusInThread(&Sbus::checkSbus, this);
-//    sbusInThread.join();
+    memset(frame, 0,  _payloadSize * sizeof(uint8_t));
+    freshness = 1;
 }
 
 
 std::array<uint16_t, Sbus::_numChannels> Sbus::getChannels() {
 
     std::lock_guard<std::mutex> guard(channelsMutex);
+    freshness++;
     return channels;
+}
+
+int Sbus::getFreshness() const {
+    return freshness;
 }
 
 

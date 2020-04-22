@@ -22,7 +22,7 @@
 */
 class Sbus {
 private:
-    uint32_t serialPort;
+    uint32_t serialPort{};
     std::string devicePath;
 
 
@@ -48,18 +48,13 @@ private:
      *      - 18: failsafe activated bit,
      *      - 19: lost frame bit.
      */
-//    uint16_t channels[_numChannels];
-    std::array<uint16_t, _numChannels> channels;
+    std::array<uint16_t, _numChannels> channels{};
     std::mutex channelsMutex;
+    uint8_t frame[_payloadSize]{};
+    int freshness;
 
 
-    /**
-    * @brief Initializes Raspberry Pi's serial interface to accept communication
-    * with the radio receiver.
-    *
-    * @return bool: true - on success, false - on failure
-    */
-    bool serialBegin();
+
 
     /**
      * @brief Prints channel data to the console.
@@ -89,9 +84,19 @@ private:
 public:
     explicit Sbus(std::string devicePath);
 
+    /**
+    * @brief Initializes Raspberry Pi's serial interface to accept communication
+    * with the radio receiver.
+    *
+    * @return bool: true - on success, false - on failure
+    */
+    bool serialBegin();
+
     std::array<uint16_t, _numChannels> getChannels();
+
     void checkSbus();
 
+    int getFreshness() const;
 };
 
 
