@@ -84,13 +84,13 @@ private:
      */
     bool serialRead(uint8_t* frame);
 
-    void checkSbus();
+
     
 public:
     explicit Sbus(std::string devicePath);
 
     std::array<uint16_t, _numChannels> getChannels();
-
+    void checkSbus();
 
 };
 

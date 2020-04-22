@@ -149,6 +149,8 @@ bool Sbus::serialRead(uint8_t *frame) {
             return false;
         }
 
+        std::cout << "Value read: " << byteBuffer << std::endl;
+
         if(byteBuffer[0] == _sbusHeader && prevByte == _sbusFooter){
             frameCouter = 0;
         }else{
@@ -166,14 +168,18 @@ void Sbus::checkSbus() {
     serialBegin();
 
     uint8_t frame[_payloadSize];
-
-    serialRead(frame);
-    sbusParse(frame);
+    memset(frame, 0,  _payloadSize * sizeof(uint8_t));
+//
+    while(true) {
+        serialRead(frame);
+        sbusParse(frame);
+    }
 }
 
 Sbus::Sbus(std::string devicePath) : devicePath(std::move(devicePath)) {
 
-    std::thread sbusInThread(&Sbus::checkSbus, this);
+//    std::thread sbusInThread(&Sbus::checkSbus, this);
+//    sbusInThread.join();
 }
 
 
